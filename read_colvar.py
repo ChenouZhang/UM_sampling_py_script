@@ -5,7 +5,7 @@ import math
 #Python scripts to read,plot 2D_umbrella_sampling result.
 #Add WHAM-2d read and plot.
 
-def readcolvar_coord(f):
+def ReadColvar_Coord(f):
 	'''
 	Parameters: f: Input file head
 	               Read the x,y coordinates directly from plumed ouput dat file.
@@ -31,16 +31,18 @@ def readcolvar_coord(f):
 		#y.append(float(temp))
 	return coord,x,y
 
-def readcolvar_bias(f):
+def ReadColvar_Bias(f):
 	'''
-	Parameters: f: Input file head
-	               Read the x,y coordinates directly from plumed ouput dat file.
-	               #! FIELDS time p1.sss p1.zzz restraint-phi.bias restraint-psi.bias
-	                         0.00   1.11  0.001       1.105              0.0002
+	Parameters: 
+		f: Input file head
+			Read the bias potential directly from plumed ouput dat file.
+			#! FIELDS time p1.sss p1.zzz restraint-phi.bias restraint-psi.bias
+	                  0.00   1.11  0.001       1.105              0.0002
 
-	Returns:    Bias:  array_like bias_energy (phi_bias,psi_bias) pairs
-	            phi_bias: array_like x coordinates
-	            psi_bias: array_like y coordinates
+	Returns:
+		Bias:  array_like bias_energy (phi_bias,psi_bias) pairs
+		phi_bias: array_like x coordinates
+		psi_bias: array_like y coordinates
 	'''
 	print(f)
 	## Skip first row.
@@ -57,75 +59,86 @@ def readcolvar_bias(f):
 		#y.append(float(temp))
 	return Bias,phi_bias,psi_bias
 
-def readwham(f):
+def ReadWHAM(f):
 	'''
-	Parameters: f: Input file head
-	               Read the x,y coordinates directly from plumed ouput dat file.
-	               #! FIELDS time p1.sss p1.zzz restraint-phi.bias restraint-psi.bias
-	                         0.00   1.11  0.001       1.105              0.0002
+	Parameters:
+	f: Input file head
+		Read free energy and coordinates from WHAM output
+		#X      Y      Free     Pro
+		0.00   1.11   0.001    0.00
 
-	Returns:    Bias:  array_like bias_energy (phi_bias,psi_bias) pairs
-	            phi_bias: array_like x coordinates
-	            psi_bias: array_like y coordinates
+	Returns:
+		Coord: array_like coordinates (x,y,Free) pairs
+		Free: array_like Free energy
+		x: array_like x coordinates
+		y: array_like y coordinates
 	'''
 	print(f)
+	## Skip first row
 	next(f)
 	coord = []
-	x = []
-	y = []
+	#x = []
+	#y = []
 	Free = []
-	i = 0
+	## Line counter:  WHAM output skip 1 line after 50 lines
+	Line_counter = 0
 	for line in f:
-		if i == 50:
-			i = 0
+		if Line_counter == 50:
+			Line_counter = 0
 			continue
 		temp1 = float(line.split()[0])
 		temp2 = float(line.split()[1])
 		temp3 = float(line.split()[2])
-		x.append(temp1)
-		y.append(temp2)
+		#x.append(temp1)
+		#y.append(temp2)
 		Free.append(temp3)
 		coord.append([temp1,temp2,temp3])
 		#print ('ok'+str(i))
-		i=i+1
+		Line_counter = Line_counter + 1
 	return coord,Free
 
-def plotwham(f,binx=1000,biny=50,minx=1.,maxx=11.,miny=-0.005,maxy=0.06):
-	## Input file head, change binx,biny,minx,maxx,miny,maxy if neccesary
-	## Bin number binx and biny
-	##_________________________________________________________________________________________________________
-	## Return H,x,y ready for any contour plot.
+def PlotWHAM_2D(f,binx=1000,biny=50,minx=1.,maxx=11.,miny=-0.005,maxy=0.06):
+	'''
+	Read WHAM-2D output and generate 'contour' ready outputs
+
+	Parameters: f: Input file head
+	            binx: 
+				biny:
+				minx:
+				maxx:
+				miny:
+				maxy:
+	Returns:    H:
+				xv:
+				yv:
+	'''
 	x = []
 	y = []
-	print ('Following are the input parameters:_______________________________________________________________')
-	print ('binx:'+str(binx),'biny:'+str(biny))
-	## set x,y interval
+	## Set x,y interval
 	xint = (maxx-minx)/binx
 	yint = (maxy-miny)/biny
-	print ('X,Y interval have been set to:'+str(xint)+' '+str(yint))
+	## Get 2D meshgrid on x,y
 	x = np.linspace(minx,maxx,binx)
 	y = np.linspace(miny,maxy,biny)
 	xv,yv = np.meshgrid(x,y)
+	## 
 	H = [[0]*binx for _ in range(biny)]
+	print ('Following are the input parameters:_______________________________________________________________')
+	print ('X,Y interval have been set to:'+str(xint)+' '+str(yint))
+	print ('binx:'+str(binx),'biny:'+str(biny))
 	#print (np.shape(H))
 	#xtemp = []
 	#ytemp = []
-	Coord_temp,Free = readwham(f)
+	Coord_temp,Free = ReadWHAM(f)
 	num = np.shape(Coord_temp)
 	print (num)
 	for k in Coord_temp:
 		xind = int(math.ceil((k[0]-minx)/xint)-1)
 		yind = int(math.ceil((k[1]-miny)/yint)-1)
 		if k[2] >= 1000000:
-			H[yind][xind] = 0
+			H[yind][xind] = np.NAN
 		else:
-			H[yind][xind] = k[2]
-		#if xind >= 1000 or xind <= 0:
-		#	print(k)
-		#if yind >= 50 or yind <= 0:
-		#	print(k)
-		#print(xind,yind)
-				
+			H[yind][xind] = k[2]				
 	return H,xv,yv
 
 def plotcolvar(x,y,binx,biny):
@@ -148,7 +161,7 @@ def contourcolvar(x,y,binx,biny):
 	#print xdim,ydim,Hdim
 	return xedge,yedge,H
 
-def readwindows(window_sn,window_zn,binx,biny,minx=1.,maxx=11.,miny=-0.005,maxy=0.07):
+def ReadWindows(window_sn,window_zn,binx,biny,minx=1.,maxx=11.,miny=-0.005,maxy=0.07):
 	## Input file name as index_sn(1-11) , index_zn(1,2,3)
 	## Bin number binx and biny
 	##_________________________________________________________________________________________________________
@@ -176,7 +189,7 @@ def readwindows(window_sn,window_zn,binx,biny,minx=1.,maxx=11.,miny=-0.005,maxy=
 				continue
 			## -----------------------------------------------------------
 			with open('colvar_reference_'+str(i)+'_'+str(j)+'_20ns') as f:
-				Coord_temp,xtemp,ytemp = readcolvar_coord(f)
+				Coord_temp,xtemp,ytemp = ReadColvar_Coord(f)
 				num = np.shape(Coord_temp)
 				print (num)
 				for k in Coord_temp:
@@ -220,7 +233,4 @@ def FindFWHM(histogram):
 	FWHM = np.abs(fminn-sminn)
 	return FWHM
 
-
-
-
-
+##
