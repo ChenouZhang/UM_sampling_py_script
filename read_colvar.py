@@ -102,15 +102,15 @@ def PlotWHAM_2D(f,binx=1000,biny=50,minx=1.,maxx=11.,miny=-0.005,maxy=0.06):
 	Read WHAM-2D output and generate 'contour' ready outputs
 
 	Parameters: f: Input file head
-	            binx: 
-				biny:
-				minx:
-				maxx:
-				miny:
-				maxy:
-	Returns:    H:
-				xv:
-				yv:
+	            binx: Number of bins in x axis
+				biny: Number of bins in y axis
+				minx: Minium in x axis
+				maxx: Maxium in x axis
+				miny: Minium in y axis
+				maxy: Maxium in y axis
+	Returns:    H: 2D meshgrid for histogram 
+				xv: 2D meshgrid on x
+				yv: 2D meshgrid on y
 	'''
 	x = []
 	y = []
@@ -121,7 +121,7 @@ def PlotWHAM_2D(f,binx=1000,biny=50,minx=1.,maxx=11.,miny=-0.005,maxy=0.06):
 	x = np.linspace(minx,maxx,binx)
 	y = np.linspace(miny,maxy,biny)
 	xv,yv = np.meshgrid(x,y)
-	## 
+	## Initialize H
 	H = [[0]*binx for _ in range(biny)]
 	print ('Following are the input parameters:_______________________________________________________________')
 	print ('X,Y interval have been set to:'+str(xint)+' '+str(yint))
@@ -130,12 +130,14 @@ def PlotWHAM_2D(f,binx=1000,biny=50,minx=1.,maxx=11.,miny=-0.005,maxy=0.06):
 	#xtemp = []
 	#ytemp = []
 	Coord_temp,Free = ReadWHAM(f)
+	#Print dimension of Coord_temp
 	num = np.shape(Coord_temp)
 	print (num)
 	for k in Coord_temp:
 		xind = int(math.ceil((k[0]-minx)/xint)-1)
 		yind = int(math.ceil((k[1]-miny)/yint)-1)
 		if k[2] >= 1000000:
+			## Assign NAN for non-sampled region
 			H[yind][xind] = np.NAN
 		else:
 			H[yind][xind] = k[2]				
