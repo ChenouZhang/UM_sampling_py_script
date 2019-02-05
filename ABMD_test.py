@@ -44,7 +44,7 @@ def Calculate_RMSD(Ini_ref,End_ref):
     align.alignto(Ini_temp,End_temp)
     Ini_position = Ini_temp.positions
     End_position = End_temp.positions
-    rmsd_ab = rmsd(Ini_temp,End_temp)
+    rmsd_ab = rmsd(Ini_position,End_position)
     return rmsd_ab,Ini_position,End_position
 
 ddRMSD = []                        # ddRMSD
