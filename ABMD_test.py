@@ -41,9 +41,9 @@ def Calculate_RMSD(Ini_ref,End_ref):
     '''
     Ini_temp = Ini_ref.select_atoms('name CA')
     End_temp = End_ref.select_atoms('name CA')
+    align.alignto(Ini_temp,End_temp)
     Ini_position = Ini_temp.positions
     End_position = End_temp.positions
-    align.alignto(Ini_temp,End_temp)
     rmsd_ab = rmsd(Ini_temp,End_temp)
     return rmsd_ab,Ini_position,End_position
 
